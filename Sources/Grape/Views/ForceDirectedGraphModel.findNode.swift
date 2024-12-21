@@ -7,6 +7,9 @@ extension ForceDirectedGraphModel {
     internal func findNode(
         at locationInSimulationCoordinate: SIMD2<Double>
     ) -> NodeID? {
+        
+        let viewportScale = self.finalTransform.scale
+        
         for i in simulationContext.storage.kinetics.range.reversed() {
             let iNodeID = simulationContext.nodeIndices[i]
             guard
@@ -16,9 +19,10 @@ extension ForceDirectedGraphModel {
             else { continue }
             let iPos = simulationContext.storage.kinetics.position[i]
             
-
-            if simd_length_squared(locationInSimulationCoordinate - iPos) <= iRadius2
-            {
+            let scaledRadius2 = iRadius2 / max(.ulpOfOne, (8.0 * viewportScale * viewportScale))
+            let length2 = simd_length_squared(locationInSimulationCoordinate - iPos)
+            
+            if length2 <= scaledRadius2 {
                 return iNodeID
             }
         }
